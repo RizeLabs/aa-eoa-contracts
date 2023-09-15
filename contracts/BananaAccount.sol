@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.12;
+pragma solidity 0.8.17;
 
 /* solhint-disable avoid-low-level-calls */
 /* solhint-disable no-inline-assembly */
@@ -8,10 +8,7 @@ pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import './safe-contracts/Safe.sol';
 import './interfaces/UserOperation.sol';
-import './utils/EllipticalCurveLibrary.sol';
 import './utils/Exec.sol';
-import './utils/BytesUtils.sol';
-import './utils/Base64.sol';
 
 contract BananaAccount is Safe {
     using ECDSA for bytes32;
@@ -31,15 +28,6 @@ contract BananaAccount is Safe {
      */
     modifier onlyOwner() {
         require(msg.sender == owner, "Caller Is Not Owner");
-        _;
-    }
-
-    /**
-     * @dev Modifier to allow only the owner or the contract itself to call the function.
-     * Reverts with MixedAuthFail if the caller is not the owner or the contract itself.
-     */
-    modifier mixedAuth() {
-        require(msg.sender == owner || msg.sender != address(this), "Mixed Auth Fail");
         _;
     }
 
@@ -171,7 +159,7 @@ contract BananaAccount is Safe {
         Enum.Operation operation
     ) public {
         // Only Entrypoint is allowed.
-        require(msg.sender == entryPoint, 'account: not from EntryPoint');
+        _requireFromEntryPoint();
         // Execute transaction without further confirmations.
         _executeAndRevert(to, value, data, operation);
     }
@@ -188,7 +176,7 @@ contract BananaAccount is Safe {
         Enum.Operation operation
     ) public {
         // Only Entrypoint is allowed.
-        require(msg.sender == entryPoint, 'account: not from EntryPoint');
+        _requireFromEntryPoint();
         // Execute transaction without further confirmations.
         require(to.length == data.length, "wrong array lengths");
         for(uint256 i=0; i < to.length; i++) {
@@ -228,7 +216,7 @@ contract BananaAccount is Safe {
      * @dev Allows to change the owner of the smart account by current owner or self-call (modules)
      * @param _newOwner Address of the new signatory
      */
-    function updateOwner(address _newOwner) public mixedAuth {
+    function updateOwner(address _newOwner) public onlyOwner {
         if (_newOwner == address(0)) revert OwnerCannotBeZero();
         if (_newOwner == address(this)) revert OwnerCanNotBeSelf();
         if (_newOwner == owner) revert OwnerProvidedIsSame();

@@ -11,7 +11,7 @@ dotenv.config({ path: ".env.local" });
 
 export default {
   solidity: {
-    version: "0.8.15",
+    version: "0.8.17",
     settings: {
       viaIR: true,
       optimizer: {
@@ -23,7 +23,6 @@ export default {
       },
     },
   },
-  defaultNetwork: "mumbai",
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
